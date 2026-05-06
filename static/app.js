@@ -440,14 +440,20 @@ function renderHeader() {
       <div class="header-content">
         <div class="header-brand">
           <div class="brand-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <img
+              class="brand-icon-img"
+              src="/static/icon.png"
+              alt="算法超人小工具"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+            />
+            <svg style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
           </div>
           <div class="brand-text">
             <h1 class="brand-title">CCF会议倒计时</h1>
-            <p class="brand-subtitle">Python · Flask · 与同目录原版视觉一致</p>
+            <p class="brand-subtitle">技术交流：1083810317 QQ群 · 算法超人小工具 · Python · Flask</p>
           </div>
         </div>
         <div class="header-stats" id="header-stats">
@@ -635,7 +641,22 @@ document.addEventListener('DOMContentLoaded', () => {
     </main>
     <div id="modal-container"></div>
     <footer class="footer">
-      <p>CCF会议倒计时 · Python Flask 镜像（数据：data/conferences.json）</p>
+      <p>CCF会议倒计时 · 算法超人小工具</p>
+      <div class="footer-extra">
+        <div class="footer-block">
+          <div class="footer-block-title">声明</div>
+          <div class="footer-block-body">
+            <div>本工具仅用于学术会议时间管理与信息展示，数据可能存在延迟/错误，请以会议官网为准。</div>
+            <div>数据来源：<a class="footer-link" href="https://github.com/ccfddl/ccf-deadlines" target="_blank" rel="noopener noreferrer">ccfddl/ccf-deadlines</a>（以及本站静态数据缓存）。</div>
+          </div>
+        </div>
+        <div class="footer-block">
+          <div class="footer-block-title">技术交流</div>
+          <div class="footer-block-body">
+            <div>技术交流：1083810317 QQ群</div>
+          </div>
+        </div>
+      </div>
     </footer>`;
 
   updateStats(conferences);
