@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ccfddl-python-app
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: ccfddl_python_app
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
