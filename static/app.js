@@ -453,7 +453,7 @@ function renderHeader() {
           </div>
           <div class="brand-text">
             <h1 class="brand-title">CCF会议倒计时</h1>
-            <p class="brand-subtitle">技术交流：1083810317 QQ群 · 算法超人小工具 · Python · Flask</p>
+            <p class="brand-subtitle">技术交流微信：suanfachaoren321 · 算法超人小工具 · Python · Flask</p>
           </div>
         </div>
         <div class="header-stats" id="header-stats">
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="footer-block">
           <div class="footer-block-title">技术交流</div>
           <div class="footer-block-body">
-            <div>技术交流：1083810317 QQ群</div>
+            <div>技术交流微信：suanfachaoren321</div>
           </div>
         </div>
       </div>
