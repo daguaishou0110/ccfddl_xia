@@ -647,7 +647,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="footer-block-title">声明</div>
           <div class="footer-block-body">
             <div>本工具仅用于学术会议时间管理与信息展示，数据可能存在延迟/错误，请以会议官网为准。</div>
-            <div>数据来源：<a class="footer-link" href="https://github.com/ccfddl/ccf-deadlines" target="_blank" rel="noopener noreferrer">ccfddl/ccf-deadlines</a>（以及本站静态数据缓存）。</div>
+            <div>
+              数据来源：<a class="footer-link" href="https://github.com/ccfddl/ccf-deadlines" target="_blank" rel="noopener noreferrer">ccfddl/ccf-deadlines</a>（以及本站静态数据缓存）；
+              更多会议：<a class="footer-link" href="https://ccfddl.top/" target="_blank" rel="noopener noreferrer">ccfddl.top</a>
+            </div>
           </div>
         </div>
         <div class="footer-block">
