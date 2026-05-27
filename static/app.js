@@ -161,6 +161,24 @@ function getNextDeadline(conference) {
   return null;
 }
 
+function getDeadlineSortTime(conference) {
+  const submissionEnd = submissionDeadlineEnd(conference.dates?.submission);
+  const now = Date.now();
+  if (submissionEnd && submissionEnd.getTime() >= now) return submissionEnd.getTime();
+  return Number.POSITIVE_INFINITY;
+}
+
+function sortByDeadlineUrgency(conferences) {
+  return [...conferences].sort((a, b) => {
+    const aTime = getDeadlineSortTime(a);
+    const bTime = getDeadlineSortTime(b);
+    if (aTime !== bTime) return aTime - bTime;
+    const aName = String(a.shortName || a.name || '');
+    const bName = String(b.shortName || b.name || '');
+    return aName.localeCompare(bName, 'zh-CN', { sensitivity: 'base' });
+  });
+}
+
 function getConferenceStatus(conference) {
   const now = new Date();
   const submissionEnd = submissionDeadlineEnd(conference.dates?.submission);
@@ -232,6 +250,298 @@ function renderStatusBadge(status) {
   };
   const info = statusMap[status] || statusMap.upcoming;
   return `<span class="tag ${info.class}">${escapeHtml(info.text)}</span>`;
+}
+
+const DOMAIN_ALIASES = [
+  {
+    aliases: ['nlp', 'natural language processing', 'computational linguistics', '自然语言处理', '自然语言', '语言处理', '计算语言学'],
+    terms: ['acl', 'emnlp', 'naacl', 'eacl', 'coling', 'conll', 'ijcnlp', 'nlpcc', 'colm', 'lrec', 'aacl', 'computational linguistics'],
+  },
+  {
+    aliases: ['llm', '大语言模型', '语言模型', '预训练语言模型', 'instruction tuning', 'rlhf', 'prompting'],
+    terms: ['acl', 'emnlp', 'naacl', 'eacl', 'coling', 'colm', 'iclr', 'neurips', 'llm', 'language model'],
+  },
+  {
+    aliases: ['information extraction', 'ie', '信息抽取', '命名实体识别', '实体识别', '关系抽取', '事件抽取'],
+    terms: ['acl', 'emnlp', 'naacl', 'coling', 'conll', 'information extraction', 'named entity recognition'],
+  },
+  {
+    aliases: ['machine translation', 'mt', '机器翻译', '翻译'],
+    terms: ['acl', 'emnlp', 'naacl', 'eacl', 'coling', 'wmt', 'machine translation'],
+  },
+  {
+    aliases: ['question answering', 'qa', '问答系统', '阅读理解'],
+    terms: ['acl', 'emnlp', 'naacl', 'coling', 'question answering', 'reading comprehension'],
+  },
+  {
+    aliases: ['cv', 'computer vision', 'vision', '视觉', '计算机视觉', '模式识别', '图像识别'],
+    terms: ['cvpr', 'iccv', 'eccv', 'accv', 'wacv', 'bmvc', 'icpr', '3dv', 'fg', 'computer vision', 'pattern recognition'],
+  },
+  {
+    aliases: ['object detection', 'detection', '目标检测', '检测'],
+    terms: ['cvpr', 'iccv', 'eccv', 'wacv', 'accv', 'bmvc', 'icpr', 'object detection'],
+  },
+  {
+    aliases: ['image segmentation', 'segmentation', '图像分割', '语义分割', '实例分割', '全景分割'],
+    terms: ['cvpr', 'iccv', 'eccv', 'wacv', 'accv', 'bmvc', 'segmentation'],
+  },
+  {
+    aliases: ['tracking', 'object tracking', '跟踪', '目标跟踪', '多目标跟踪'],
+    terms: ['cvpr', 'iccv', 'eccv', 'wacv', 'accv', 'bmvc', 'tracking'],
+  },
+  {
+    aliases: ['video understanding', 'video analysis', '视频理解', '动作识别', '时空建模'],
+    terms: ['cvpr', 'iccv', 'eccv', 'acm mm', 'icme', 'icmr', 'video understanding', 'action recognition'],
+  },
+  {
+    aliases: ['3d vision', '3d reconstruction', '三维视觉', '三维重建', '点云', 'neural rendering', '新视角合成'],
+    terms: ['3dv', 'cvpr', 'iccv', 'eccv', 'siggraph', 'siggraph asia', '3d vision', '3d reconstruction'],
+  },
+  {
+    aliases: ['multimodal', 'vision language', 'vlm', '多模态', '视觉语言', '图文', '视频语言'],
+    terms: ['cvpr', 'iccv', 'eccv', 'acm mm', 'acl', 'emnlp', 'multimodal', 'vision language'],
+  },
+  {
+    aliases: ['image generation', 'generation', 'aigc', '图像生成', '生成式视觉', '扩散模型', 'diffusion'],
+    terms: ['cvpr', 'iccv', 'eccv', 'siggraph', 'neurips', 'iclr', 'diffusion', 'generation'],
+  },
+  {
+    aliases: ['multimedia', '多媒体', '图像处理', '视频处理'],
+    terms: ['acm mm', 'mm', 'mmsys', 'icme', 'icmr', 'icip', 'interspeech', '多媒体', '图像处理', '视频处理'],
+  },
+  {
+    aliases: ['ml', 'machine learning', '机器学习', '深度学习', 'learning'],
+    terms: ['icml', 'iclr', 'nips', 'neurips', 'aistats', 'uai', 'acml', 'mlsys', '机器学习', '深度学习'],
+  },
+  {
+    aliases: ['reinforcement learning', 'rl', '强化学习'],
+    terms: ['neurips', 'icml', 'iclr', 'aamas', 'uai', 'corl', 'rss', 'reinforcement learning'],
+  },
+  {
+    aliases: ['graph learning', 'gnn', '图学习', '图神经网络'],
+    terms: ['neurips', 'iclr', 'icml', 'kdd', 'www', 'graph learning', 'graph neural network'],
+  },
+  {
+    aliases: ['federated learning', '联邦学习', 'privacy learning', '隐私学习'],
+    terms: ['neurips', 'icml', 'iclr', 'kdd', 'www', 'federated learning'],
+  },
+  {
+    aliases: ['symbolic regression', 'symbolic learning', '符号回归', '符号学习', '遗传编程', 'genetic programming'],
+    terms: ['gecco', 'ppsn', 'icml', 'neurips', 'ecml-pkdd', 'aaai', 'ijcai', 'symbolic regression', 'genetic programming'],
+  },
+  {
+    aliases: ['ai', 'artificial intelligence', '人工智能'],
+    terms: ['aaai', 'ijcai', 'ecai', 'aamas', 'pricai', '人工智能'],
+  },
+  {
+    aliases: ['cryptography', 'crypto', '密码学', '同态加密', '零知识', 'zk'],
+    terms: ['crypto', 'eurocrypt', 'asiacrypt', 'pkc', 'tcc', 'ches', 'cryptography'],
+  },
+  {
+    aliases: ['security', '安全', '网络安全', '信息安全'],
+    terms: ['ccs', 'sp', 's&p', 'uss', 'usenix security', 'ndss', 'crypto', 'eurocrypt', 'asiacrypt', 'esorics', 'acsac', 'ches', '网络与信息安全', '密码学', '安全协议'],
+  },
+  {
+    aliases: ['system security', 'systems security', '系统安全', '漏洞利用', '软件安全'],
+    terms: ['ccs', 'sp', 'uss', 'ndss', 'acsac', 'esorics', 'system security'],
+  },
+  {
+    aliases: ['privacy', '隐私保护', '差分隐私', '匿名化'],
+    terms: ['pets', 'ccs', 'sp', 'uss', 'ndss', 'privacy'],
+  },
+  {
+    aliases: ['database', 'db', '数据库', '数据挖掘', '检索'],
+    terms: ['sigmod', 'vldb', 'icde', 'pods', 'kdd', 'sigkdd', 'sigir', 'cikm', 'wsdm', 'icdm', '数据库', '数据挖掘', '信息检索'],
+  },
+  {
+    aliases: ['information retrieval', 'ir', '搜索', '检索', '推荐', 'recommendation', 'recsys'],
+    terms: ['sigir', 'wsdm', 'cikm', 'recsys', 'kdd', 'information retrieval', 'recommendation'],
+  },
+  {
+    aliases: ['data mining', 'mining', '数据挖掘', '知识发现'],
+    terms: ['kdd', 'icdm', 'sdm', 'cikm', 'wsdm', 'data mining'],
+  },
+  {
+    aliases: ['network', 'networks', '网络', '计算机网络', '分布式系统'],
+    terms: ['sigcomm', 'nsdi', 'infocom', 'conext', 'mobicom', 'mobisys', 'sensys', '计算机网络', '网络通信', '分布式系统'],
+  },
+  {
+    aliases: ['wireless', 'mobile', '无线网络', '移动计算', '物联网', 'sensor network'],
+    terms: ['mobicom', 'mobisys', 'sensys', 'ipsn', 'secon', 'wireless', 'mobile'],
+  },
+  {
+    aliases: ['distributed systems', 'distributed', '分布式系统', '云计算', 'cloud'],
+    terms: ['nsdi', 'eurosys', 'atc', 'sosp', 'osdi', 'middleware', 'distributed systems', 'cloud'],
+  },
+  {
+    aliases: ['hci', 'human computer interaction', '人机交互', '普适计算'],
+    terms: ['chi', 'uist', 'cscw', 'ubicomp', 'percom', 'iui', 'icwsm', '人机交互', '普适计算'],
+  },
+  {
+    aliases: ['software engineering', 'se', '软件工程', '程序语言', '编程语言'],
+    terms: ['icse', 'fse', 'ase', 'issta', 'pldi', 'popl', 'oopsla', 'icfp', '软件工程', '程序设计语言'],
+  },
+  {
+    aliases: ['testing', 'program analysis', 'verification', '测试', '程序分析', '形式化验证', '静态分析'],
+    terms: ['icse', 'fse', 'ase', 'issta', 'cav', 'fm', 'icst', 'program analysis', 'verification'],
+  },
+  {
+    aliases: ['programming language', 'pl', '编程语言', '编译', 'compiler'],
+    terms: ['pldi', 'popl', 'oopsla', 'icfp', 'cc', 'programming language', 'compiler'],
+  },
+  {
+    aliases: ['architecture', '体系结构', '高性能计算', '并行计算', '系统'],
+    terms: ['isca', 'micro', 'hpca', 'asplos', 'sc', 'hpdc', 'fast', 'eurosys', 'atc', '计算机体系结构', '高性能计算', '并行计算'],
+  },
+  {
+    aliases: ['operating systems', 'os', '存储系统', '系统架构', '操作系统'],
+    terms: ['sosp', 'osdi', 'eurosys', 'fast', 'atc', 'operating systems', 'storage'],
+  },
+  {
+    aliases: ['theory', '理论', '算法', '复杂性'],
+    terms: ['stoc', 'focs', 'soda', 'cav', 'lics', 'icalp', '计算机科学理论', '算法', '计算复杂性'],
+  },
+];
+
+const CONFERENCE_PROFILES = {
+  CVPR: ['目标检测', '图像分割', '视频理解', '三维视觉', '多模态', '图像生成'],
+  ICCV: ['目标检测', '图像分割', '视频理解', '三维视觉', '多模态', '图像生成'],
+  ECCV: ['目标检测', '图像分割', '视频理解', '三维视觉', '多模态', '图像生成'],
+  WACV: ['目标检测', '图像分割', '图像识别', '视频理解'],
+  ACCV: ['目标检测', '图像分割', '三维视觉', '视频理解'],
+  BMVC: ['目标检测', '图像分割', '三维视觉', '图像识别'],
+  ICPR: ['模式识别', '目标检测', '图像分割', '文档分析'],
+  '3DV': ['三维视觉', '三维重建', '点云', '新视角合成'],
+  'ACM MM': ['多媒体', '视频理解', '多模态', '跨模态检索'],
+  ICME: ['多媒体', '视频理解', '图像处理', '音视频分析'],
+  ICMR: ['多媒体检索', '视频检索', '跨模态检索', '推荐'],
+  ACL: ['自然语言处理', '大语言模型', '信息抽取', '机器翻译', '问答系统'],
+  EMNLP: ['自然语言处理', '大语言模型', '信息抽取', '机器翻译', '问答系统'],
+  NAACL: ['自然语言处理', '大语言模型', '信息抽取', '机器翻译', '问答系统'],
+  EACL: ['自然语言处理', '信息抽取', '机器翻译', '问答系统'],
+  COLING: ['自然语言处理', '信息抽取', '机器翻译', '问答系统'],
+  CoNLL: ['信息抽取', '句法分析', '序列标注', '自然语言理解'],
+  IJCNLP: ['自然语言处理', '中文处理', '机器翻译', '信息抽取'],
+  NLPCC: ['自然语言处理', '中文处理', '信息检索', '对话系统'],
+  COLM: ['大语言模型', '基础模型', '模型训练', '推理优化'],
+  SIGIR: ['信息检索', '搜索', '推荐系统', '检索增强生成'],
+  WSDM: ['信息检索', '搜索', '推荐系统', '数据挖掘'],
+  CIKM: ['信息检索', '推荐系统', '知识图谱', '数据挖掘'],
+  RecSys: ['推荐系统', '排序', '用户建模', '个性化'],
+  'SIGKDD': ['数据挖掘', '推荐系统', '图学习', '工业机器学习'],
+  ICDM: ['数据挖掘', '异常检测', '时序分析', '图挖掘'],
+  ICML: ['机器学习', '深度学习', '强化学习', '表示学习'],
+  ICLR: ['机器学习', '深度学习', '大语言模型', '表示学习', '生成模型'],
+  NeurIPS: ['机器学习', '深度学习', '强化学习', '图学习', '生成模型'],
+  AISTATS: ['统计机器学习', '概率模型', '优化', '因果推断'],
+  UAI: ['概率图模型', '因果推断', '不确定性建模', '机器学习'],
+  GECCO: ['进化计算', '遗传编程', '符号回归', '黑盒优化'],
+  PPSN: ['进化算法', '遗传编程', '符号回归', '神经进化'],
+  AAMAS: ['多智能体', '强化学习', '博弈论', '智能决策'],
+  CoRL: ['机器人学习', '强化学习', '模仿学习', '控制'],
+  AAAI: ['人工智能', '机器学习', '知识表示', '符号回归'],
+  IJCAI: ['人工智能', '机器学习', '知识推理', '符号回归'],
+  'ECML-PKDD': ['机器学习', '数据挖掘', '自动机器学习', '符号回归'],
+  RSS: ['机器人', '定位建图', '运动规划', '机器人学习'],
+  CCS: ['系统安全', '网络安全', '应用安全', '隐私保护'],
+  NDSS: ['系统安全', '网络安全', 'Web安全', '恶意软件分析'],
+  'S&P': ['系统安全', '网络安全', '隐私保护', '安全理论'],
+  'USENIX Security': ['系统安全', '软件安全', 'Web安全', '漏洞利用'],
+  CRYPTO: ['密码学', '零知识证明', '安全多方计算', '同态加密'],
+  EUROCRYPT: ['密码学', '理论密码学', '零知识证明', '安全协议'],
+  ASIACRYPT: ['密码学', '安全协议', '零知识证明', '安全多方计算'],
+  CHES: ['密码工程', '侧信道攻击', '硬件安全', '实现安全'],
+  PKC: ['公钥密码学', '数字签名', '身份认证', '零知识证明'],
+  TCC: ['理论密码学', '安全定义', '零知识证明', '复杂性'],
+  NSDI: ['分布式系统', '网络系统', '云基础设施', '存储系统'],
+  SIGCOMM: ['计算机网络', '拥塞控制', '数据中心网络', '网络测量'],
+  INFOCOM: ['计算机网络', '无线网络', '路由优化', '网络协议'],
+  CoNEXT: ['计算机网络', '网络测量', '边缘网络', '移动网络'],
+  MobiCom: ['无线网络', '移动计算', '物联网', '边缘系统'],
+  MobiSys: ['移动系统', '移动计算', '传感系统', '边缘计算'],
+  ICSE: ['软件工程', '程序分析', '软件测试', '开发工具'],
+  ASE: ['软件工程', '程序分析', '自动化开发', '软件测试'],
+  'ESEC/FSE': ['软件工程', '程序分析', '软件测试', '开发工具'],
+  FSE: ['软件工程', '程序分析', '软件测试', '开发工具'],
+  ISSTA: ['软件测试', '程序分析', '自动化测试', '缺陷定位'],
+  ICST: ['软件测试', '测试自动化', '质量保证', '验证'],
+  CAV: ['形式化验证', '模型检查', '程序分析', '定理证明'],
+  FM: ['形式化方法', '验证', '建模', '程序正确性'],
+};
+
+const QUICK_FILTERS = [
+  '目标检测',
+  '图像分割',
+  '视频理解',
+  '多模态',
+  '大语言模型',
+  '信息抽取',
+  '推荐系统',
+  '强化学习',
+  '符号回归',
+  '程序分析',
+  '分布式系统',
+  '网络安全',
+  '密码学',
+];
+
+function normalizeSearchText(value) {
+  return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function searchableText(conference) {
+  return normalizeSearchText(
+    [
+      conference.shortName,
+      conference.name,
+      conference.acronym,
+      conference.venue,
+      conference.description,
+      ...(conference.topics || []),
+      ...(conference.subtopics || []),
+      ...(conference.searchAliases || []),
+    ].join(' '),
+  );
+}
+
+function enrichConference(conference) {
+  const profile = CONFERENCE_PROFILES[conference.shortName] || CONFERENCE_PROFILES[conference.acronym] || [];
+  const subtopics = [...new Set(profile)];
+  const searchAliases = [
+    conference.shortName,
+    conference.acronym,
+    ...subtopics,
+  ].filter(Boolean);
+  return {
+    ...conference,
+    subtopics,
+    searchAliases,
+  };
+}
+
+function resolveDomainQuery(rawTerm) {
+  const term = normalizeSearchText(rawTerm);
+  if (!term) return null;
+  return DOMAIN_ALIASES.find((group) => group.aliases.some((alias) => term.includes(normalizeSearchText(alias))));
+}
+
+function textMatchesDomainTerm(text, rawTerm) {
+  const term = normalizeSearchText(rawTerm);
+  if (!term) return false;
+  if (/^[a-z0-9&+/.-]+$/.test(term) && !term.includes(' ') && term.length <= 6) {
+    const pattern = new RegExp(`(^|[^a-z0-9])${escapeRegExp(term)}([^a-z0-9]|$)`);
+    return pattern.test(text);
+  }
+  return text.includes(term);
+}
+
+function conferenceMatchesDomain(conference, domain) {
+  const text = searchableText(conference);
+  return domain.terms.some((term) => textMatchesDomainTerm(text, term));
 }
 
 function renderConferenceCard(conference, countdown, nextEvent) {
@@ -337,7 +647,7 @@ function renderDetailModal(conference) {
                     </div>
                   </div>`;
   });
-  const topics = (conference.topics || [])
+  const topics = [...new Set([...(conference.subtopics || []), ...(conference.topics || [])])]
     .map((t) => `<span class="topic-tag">${escapeHtml(t)}</span>`)
     .join('');
   return `
@@ -480,6 +790,12 @@ function renderFilterBar() {
         </svg>
         <input type="search" class="search-input" id="search-input" placeholder="搜索会议名称、缩写或关键词..." autocomplete="off" />
       </div>
+      <div class="quick-filters" id="quick-filters">
+        ${QUICK_FILTERS.map(
+          (term) =>
+            `<button type="button" class="quick-filter-chip" data-term="${escapeHtml(term)}">${escapeHtml(term)}</button>`,
+        ).join('')}
+      </div>
       <div class="filter-tabs" id="filter-tabs">
         <button type="button" class="filter-tab active" data-filter="all">全部</button>
         <button type="button" class="filter-tab" data-filter="deadline">截稿倒计时</button>
@@ -493,7 +809,7 @@ function renderFilterBar() {
 }
 
 function renderAllCards(conferences) {
-  return conferences
+  return sortByDeadlineUrgency(conferences)
     .map((conf) => {
       const nextEvent = getNextDeadline(conf);
       const targetDate = nextEvent?.date || conf.dates?.submission;
@@ -511,9 +827,7 @@ function updateStats(conferences) {
     deadlineEl.textContent = String(conferences.filter((c) => getConferenceStatus(c) === 'deadline').length);
 }
 
-function filterCards(filter, searchTerm, conferences) {
-  const grid = document.getElementById('cards-grid');
-  if (!grid) return;
+function getFilteredConferences(filter, searchTerm, conferences) {
   let filtered = conferences;
   if (filter === 'A' || filter === 'B' || filter === 'C') {
     filtered = conferences.filter((c) => c.ccfrating === filter);
@@ -521,17 +835,31 @@ function filterCards(filter, searchTerm, conferences) {
     filtered = conferences.filter((c) => getConferenceStatus(c) === filter);
   }
   if (searchTerm.trim()) {
-    const term = searchTerm.toLowerCase();
-    filtered = filtered.filter(
-      (c) =>
-        (c.shortName || '').toLowerCase().includes(term) ||
-        (c.name || '').toLowerCase().includes(term) ||
-        (c.acronym || '').toLowerCase().includes(term) ||
-        (c.venue || '').toLowerCase().includes(term) ||
-        (c.topics || []).some((t) => t.toLowerCase().includes(term)),
-    );
+    const term = normalizeSearchText(searchTerm);
+    const domain = resolveDomainQuery(term);
+    filtered = filtered.filter((c) => {
+      if (domain) return conferenceMatchesDomain(c, domain);
+      return searchableText(c).includes(term);
+    });
   }
+  return filtered;
+}
+
+function syncQuickFilters(searchTerm) {
+  const active = normalizeSearchText(searchTerm);
+  document.querySelectorAll('.quick-filter-chip').forEach((chip) => {
+    const term = normalizeSearchText(chip.getAttribute('data-term') || '');
+    chip.classList.toggle('active', !!active && term === active);
+  });
+}
+
+function filterCards(filter, searchTerm, conferences) {
+  const grid = document.getElementById('cards-grid');
+  if (!grid) return [];
+  const filtered = getFilteredConferences(filter, searchTerm, conferences);
   grid.innerHTML = renderAllCards(filtered);
+  syncQuickFilters(searchTerm);
+  return filtered;
 }
 
 function showModal(conference) {
@@ -574,7 +902,7 @@ function bootstrap() {
   const el = document.getElementById('ccf-bootstrap');
   if (!el) throw new Error('Missing #ccf-bootstrap');
   try {
-    return JSON.parse(el.textContent || '[]');
+    return JSON.parse(el.textContent || '[]').map(enrichConference);
   } catch {
     return [];
   }
@@ -600,8 +928,21 @@ function bindGlobalUi(conferences) {
         document.querySelectorAll('.filter-tab').forEach((x) => x.classList.remove('active'));
         tab.classList.add('active');
         const searchTerm = /** @type {HTMLInputElement} */ (document.getElementById('search-input')).value || '';
-        filterCards(filter, searchTerm, conferences);
-        updateStats(conferences);
+        const filtered = filterCards(filter, searchTerm, conferences);
+        updateStats(filtered);
+      }
+
+      const chip = t.closest('.quick-filter-chip');
+      if (chip && chip.matches('.quick-filter-chip')) {
+        const input = /** @type {HTMLInputElement} */ (document.getElementById('search-input'));
+        if (input) {
+          const chipTerm = chip.getAttribute('data-term') || '';
+          const currentTerm = normalizeSearchText(input.value);
+          input.value = currentTerm === normalizeSearchText(chipTerm) ? '' : chipTerm;
+          const active = document.querySelector('.filter-tab.active')?.getAttribute('data-filter') || 'all';
+          const filtered = filterCards(active, input.value, conferences);
+          updateStats(filtered);
+        }
       }
     });
 
@@ -618,7 +959,8 @@ function bindGlobalUi(conferences) {
       searchQueued = false;
       const inp = /** @type {HTMLInputElement} */ (document.getElementById('search-input'));
       const active = document.querySelector('.filter-tab.active')?.getAttribute('data-filter') || 'all';
-      filterCards(active, inp ? inp.value : '', conferences);
+      const filtered = filterCards(active, inp ? inp.value : '', conferences);
+      updateStats(filtered);
     });
   };
 
@@ -662,7 +1004,8 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     </footer>`;
 
-  updateStats(conferences);
+  const initialFiltered = filterCards('all', '', conferences);
+  updateStats(initialFiltered);
   bindGlobalUi(conferences);
   startCountdownUpdate(conferences);
 });

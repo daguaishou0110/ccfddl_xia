@@ -246,6 +246,38 @@ body {
   color: #9ca3af;
 }
 
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+
+.quick-filter-chip {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 9999px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.quick-filter-chip:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.quick-filter-chip.active {
+  background: white;
+  color: #5b67d8;
+  border-color: white;
+  box-shadow: 0 8px 18px rgba(67, 56, 202, 0.18);
+}
+
 .filter-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -926,6 +958,15 @@ body {
   
   .main-content {
     padding: 1rem;
+  }
+
+  .quick-filters {
+    gap: 0.5rem;
+  }
+
+  .quick-filter-chip {
+    font-size: 0.75rem;
+    padding: 0.45rem 0.8rem;
   }
   
   .cards-grid {
